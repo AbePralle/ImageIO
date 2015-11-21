@@ -1,3 +1,13 @@
+# Vim
+*.swp
+
+Source/lpng*
+
+Source/jpeg-*
+
+# OSX
+.DS_Store
+
 # Object files
 *.o
 *.ko
