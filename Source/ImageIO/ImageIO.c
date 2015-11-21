@@ -192,9 +192,10 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
 
 ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count )
 {
+  int height = decoder->height;
   png_bytepp row_pointers = png_get_rows( decoder->png_ptr, decoder->png_info_ptr );
   int row_size = (int) png_get_rowbytes( decoder->png_ptr, decoder->png_info_ptr );
-  RogueInteger* pixels = bitmap;
+  ImageIOInteger* pixels = bitmap;
 
   for (int j=0; j<height; ++j)
   {
@@ -202,33 +203,7 @@ ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageI
     pixels += decoder->width;
   }
 
-  // Premultiply the alpha and transform ABGR into ARGB
-  RogueInteger* cur = $this->bitmap->pixels->data->integers - 1;
-  for (int i=decoder->width*height; --i>=0; )
-  {
-    RogueInteger abgr = *(++cur);
-    RogueInteger a = (abgr >> 24) & 255;
-    RogueInteger r, g, b;
-
-    if (a)
-    {
-      b = (abgr >> 16) & 255;
-      g = (abgr >> 8)  & 255;
-      r = abgr & 255;
-      if (a != 255)
-      {
-        r = (r * a) / 255;
-        g = (g * a) / 255;
-        b = (b * a) / 255;
-      }
-    }
-    else
-    {
-      r = g = b = 0;
-    }
-
-    *cur = (a<<24) | (r<<16) | (g<<8) | b;
-  }
+  ImageIO_swap_red_and_blue( bitmap, pixel_count );
 
   png_destroy_read_struct( &decoder->png_ptr, &decoder->png_info_ptr, NULL );
   return 0;
