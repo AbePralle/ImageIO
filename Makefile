@@ -93,7 +93,7 @@ Source/$(LIB_JPEG):
 
 Build/ImageIO/ImageIO.o: Source/ImageIO/ImageIO.c Source/ImageIO/ImageIO.h
 	@mkdir -p Build/ImageIO
-	gcc $(CCFLAGS) -c Source/ImageIO/ImageIO.h -o Build/ImageIO/ImageIO.o
+	gcc $(CCFLAGS) -c Source/ImageIO/ImageIO.c -o Build/ImageIO/ImageIO.o
 
 #all: prepare build run
 
