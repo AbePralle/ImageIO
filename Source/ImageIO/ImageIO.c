@@ -8,25 +8,30 @@
 #include <string.h>
 #include "ImageIO.h"
 
-ImageIOLogical ImageIODecoder_init( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
+ImageIODecoder* ImageIODecoder_init( ImageIODecoder* decoder )
+{
+  memset( decoder, 0, sizeof(ImageIODecoder) );
+  return decoder;
+}
+
+ImageIOLogical ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
 {
   decoder->format = IMAGE_IO_INVALID;
   if (encoded_data_size < 4) return 0;  // definitely not an image
 
-  if (encoded_data[0] == 0xff)      ImageIODecoder_init_jpeg( decoder, encoded_data, encoded_data_size );
-  else if (encoded_data[0] == 0x89) ImageIODecoder_init_png( decoder, encoded_data, encoded_data_size );
+  if (encoded_data[0] == 0xff)      ImageIODecoder_set_input_jpeg( decoder, encoded_data, encoded_data_size );
+  else if (encoded_data[0] == 0x89) ImageIODecoder_set_input_png( decoder, encoded_data, encoded_data_size );
   else                              return 0;
 
   return 1;
 }
 
 
-ImageIOLogical ImageIODecoder_init_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
+ImageIOLogical ImageIODecoder_set_input_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
 {
   decoder->format = IMAGE_IO_JPEG;
   decoder->data = encoded_data;
   decoder->count = encoded_data_size;
-  decoder->buffer = 0;
 
   decoder->jpeg_info.err = jpeg_std_error( (struct jpeg_error_mgr*) decoder );
   decoder->jpeg_error_manager.error_exit = ImageIO_jpeg_error_callback;
@@ -56,7 +61,7 @@ ImageIOLogical ImageIODecoder_init_jpeg( ImageIODecoder* decoder, ImageIOByte* e
 }
 
 
-ImageIOLogical ImageIODecoder_init_png( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
+ImageIOLogical ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size )
 {
   decoder->format = IMAGE_IO_PNG;
 
@@ -124,18 +129,18 @@ ImageIOLogical ImageIODecoder_init_png( ImageIODecoder* decoder, ImageIOByte* en
 }
 
 
-ImageIOLogical ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count )
+ImageIOLogical ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   switch (decoder->format)
   {
-    case IMAGE_IO_JPEG: return ImageIODecoder_decode_jpeg_argb32( decoder, bitmap, pixel_count );
-    case IMAGE_IO_PNG:  return ImageIODecoder_decode_png_argb32( decoder, bitmap, pixel_count );
+    case IMAGE_IO_JPEG: return ImageIODecoder_decode_jpeg_argb32( decoder, bitmap );
+    case IMAGE_IO_PNG:  return ImageIODecoder_decode_png_argb32( decoder, bitmap );
   }
   return 0;
 }
 
 
-ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count )
+ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   int width  = decoder->width;
   int height = decoder->height;
@@ -143,7 +148,6 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
   ImageIOInteger* pixels = bitmap - 1;
 
   if (decoder->format != IMAGE_IO_JPEG) return 0;  // Input was not set up as JPEG.
-  if (pixel_count < width*height) return 0;  // buffer too small
 
   decoder->buffer = (ImageIOByte*) malloc( width*3 );
   
@@ -190,7 +194,7 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
 }
 
 
-ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count )
+ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   int height = decoder->height;
   png_bytepp row_pointers = png_get_rows( decoder->png_ptr, decoder->png_info_ptr );
@@ -203,7 +207,7 @@ ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageI
     pixels += decoder->width;
   }
 
-  ImageIO_swap_red_and_blue( bitmap, pixel_count );
+  ImageIO_swap_red_and_blue( bitmap, decoder->width*decoder->height );
 
   png_destroy_read_struct( &decoder->png_ptr, &decoder->png_info_ptr, NULL );
   return 0;

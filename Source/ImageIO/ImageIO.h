@@ -50,12 +50,13 @@ typedef struct ImageIODecoder
   png_infop    png_info_ptr;
 } ImageIODecoder;
 
-ImageIOLogical ImageIODecoder_init( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical ImageIODecoder_init_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical ImageIODecoder_init_png( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count );
-ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count );
-ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap, int pixel_count );
+ImageIODecoder* ImageIODecoder_init( ImageIODecoder* decoder );
+ImageIOLogical  ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
+ImageIOLogical  ImageIODecoder_set_input_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
+ImageIOLogical  ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
+ImageIOLogical  ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap );
+ImageIOLogical  ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap );
+ImageIOLogical  ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap );
 
 void ImageIO_demultiply_alpha( ImageIOInteger* data, int count );
 void ImageIO_premultiply_alpha( ImageIOInteger* data, int count );
