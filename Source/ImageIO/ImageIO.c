@@ -8,9 +8,23 @@
 #include <string.h>
 #include "ImageIO.h"
 
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+
+//-----------------------------------------------------------------------------
+//  ImageIODecoder
+//-----------------------------------------------------------------------------
 ImageIODecoder* ImageIODecoder_init( ImageIODecoder* decoder )
 {
   memset( decoder, 0, sizeof(ImageIODecoder) );
+  return decoder;
+}
+
+ImageIODecoder* ImageIODecoder_retire( ImageIODecoder* decoder )
+{
+  // No action - present for symmetry with ImageIOEncoder_retire().
   return decoder;
 }
 
@@ -19,11 +33,9 @@ ImageIOLogical ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* e
   decoder->format = IMAGE_IO_INVALID;
   if (encoded_data_size < 4) return 0;  // definitely not an image
 
-  if (encoded_data[0] == 0xff)      ImageIODecoder_set_input_jpeg( decoder, encoded_data, encoded_data_size );
-  else if (encoded_data[0] == 0x89) ImageIODecoder_set_input_png( decoder, encoded_data, encoded_data_size );
+  if (encoded_data[0] == 0xff)      return ImageIODecoder_set_input_jpeg( decoder, encoded_data, encoded_data_size );
+  else if (encoded_data[0] == 0x89) return ImageIODecoder_set_input_png( decoder, encoded_data, encoded_data_size );
   else                              return 0;
-
-  return 1;
 }
 
 
@@ -66,6 +78,7 @@ ImageIOLogical ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByt
   decoder->format = IMAGE_IO_PNG;
 
   decoder->data = encoded_data;
+  decoder->reader = encoded_data;
   decoder->remaining = encoded_data_size;
 
   decoder->png_ptr = png_create_read_struct( PNG_LIBPNG_VER_STRING, decoder,
@@ -74,7 +87,7 @@ ImageIOLogical ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByt
 
   png_set_add_alpha( decoder->png_ptr, 255, PNG_FILLER_AFTER );
 
-  decoder->png_info_ptr = png_create_info_struct(decoder->png_ptr);
+  decoder->png_info_ptr = png_create_info_struct( decoder->png_ptr );
   if ( !decoder->png_info_ptr )
   {
     png_destroy_read_struct( &decoder->png_ptr, NULL, NULL );
@@ -118,7 +131,7 @@ ImageIOLogical ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByt
   png_read_png(
       decoder->png_ptr,
       decoder->png_info_ptr,
-      PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_GRAY_TO_RGB,
+      PNG_TRANSFORM_STRIP_16 | PNG_TRANSFORM_PACKING | PNG_TRANSFORM_EXPAND | PNG_TRANSFORM_GRAY_TO_RGB | PNG_TRANSFORM_BGR,
       NULL
   );
 
@@ -129,18 +142,18 @@ ImageIOLogical ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByt
 }
 
 
-ImageIOLogical ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
+ImageIOLogical ImageIODecoder_decode( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   switch (decoder->format)
   {
-    case IMAGE_IO_JPEG: return ImageIODecoder_decode_jpeg_argb32( decoder, bitmap );
-    case IMAGE_IO_PNG:  return ImageIODecoder_decode_png_argb32( decoder, bitmap );
+    case IMAGE_IO_JPEG: return ImageIODecoder_decode_jpeg( decoder, bitmap );
+    case IMAGE_IO_PNG:  return ImageIODecoder_decode_png( decoder, bitmap );
   }
   return 0;
 }
 
 
-ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
+ImageIOLogical ImageIODecoder_decode_jpeg( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   int width  = decoder->width;
   int height = decoder->height;
@@ -161,7 +174,8 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
     if (decoder->jpeg_info.jpeg_color_space == JCS_GRAYSCALE)
     {
       ImageIOByte* cursor = decoder->buffer - 1;
-      for (int i=0; i<width; ++i)
+      int i;
+      for (i=0; i<width; ++i)
       {
         int k = *(++cursor);
         *(++pixels) = (255<<24) | (k<<16) | (k<<8) | k;
@@ -171,7 +185,8 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
     {
       // RGB Color
       ImageIOByte* cursor = decoder->buffer;
-      for (int i=0; i<width; ++i)
+      int i;
+      for (i=0; i<width; ++i)
       {
         int r = cursor[0];
         int g = cursor[1];
@@ -194,7 +209,7 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
 }
 
 
-ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOInteger* bitmap )
+ImageIOLogical ImageIODecoder_decode_png( ImageIODecoder* decoder, ImageIOInteger* bitmap )
 {
   int height = decoder->height;
   png_bytepp row_pointers = png_get_rows( decoder->png_ptr, decoder->png_info_ptr );
@@ -207,16 +222,157 @@ ImageIOLogical ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageI
     pixels += decoder->width;
   }
 
-  ImageIO_swap_red_and_blue( bitmap, decoder->width*decoder->height );
-
   png_destroy_read_struct( &decoder->png_ptr, &decoder->png_info_ptr, NULL );
-  return 0;
+  return 1;
 }
 
 
-void ImageIO_demultiply_alpha( ImageIOInteger* data, int count )
+//-----------------------------------------------------------------------------
+//  ImageIOEncoder
+//-----------------------------------------------------------------------------
+ImageIOEncoder* ImageIOEncoder_init( ImageIOEncoder* encoder )
 {
-  ImageIOInteger* cur = data - 1;
+  memset( encoder, 0, sizeof(ImageIOEncoder) );
+  return encoder;
+}
+
+ImageIOEncoder* ImageIOEncoder_retire( ImageIOEncoder* encoder )
+{
+  if (encoder->encoded_data)
+  {
+    free( encoder->encoded_data );
+    encoder->encoded_data = 0;
+  }
+
+  return encoder;
+}
+
+ImageIOLogical ImageIOEncoder_encode_png( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height )
+{
+  int j;
+  int color_type;
+  int must_delete_bytes;
+  int bytes_per_pixel;
+  png_bytepp row_pointers;
+  png_bytep  bytes;
+
+  encoder->png_ptr = png_create_write_struct( PNG_LIBPNG_VER_STRING, encoder,
+      ImageIO_png_error_callback, NULL );
+  if ( !encoder->png_ptr ) return 0; // Out of memory
+
+  encoder->png_info_ptr = png_create_info_struct( encoder->png_ptr );
+  if ( !encoder->png_info_ptr )
+  {
+    png_destroy_write_struct( &encoder->png_ptr, NULL );
+    return 0;  // Out of memory
+  }
+
+  if (setjmp(encoder->on_error))
+  {
+    png_destroy_write_struct( &encoder->png_ptr, &encoder->png_info_ptr );
+    return 0;
+  }
+
+  png_set_write_fn( encoder->png_ptr, encoder, ImageIO_png_write_callback, ImageIO_png_flush_callback );
+
+  if (ImageIO_bitmap_has_translucent_pixels(bitmap,width*height))
+  {
+    color_type = PNG_COLOR_TYPE_RGB_ALPHA;
+    must_delete_bytes = 0;
+    bytes = (png_bytep) bitmap;
+    bytes_per_pixel = 4;
+  }
+  else
+  {
+    int n = width*height;
+    ImageIOInteger* src = bitmap - 1;
+    png_bytep dest;
+
+    color_type = PNG_COLOR_TYPE_RGB;
+    must_delete_bytes = 1;
+    bytes_per_pixel = 3;
+    bytes = malloc( width * height * 3 );
+    dest = bytes;
+    while (--n >= 0)
+    {
+      int argb = *(++src);
+      dest[0] = (png_byte) argb;
+      dest[1] = (png_byte) (argb >> 8);
+      dest[2] = (png_byte) (argb >> 16);
+      dest += 3;
+    }
+  }
+
+  png_set_IHDR( encoder->png_ptr, encoder->png_info_ptr, width, height, 8,
+       color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
+
+  row_pointers = malloc( sizeof(png_bytep) * height );
+  for (j=0; j<height; ++j)
+  {
+    row_pointers[j] = bytes + j*width*bytes_per_pixel;
+  }
+
+  png_set_rows( encoder->png_ptr, encoder->png_info_ptr, row_pointers );
+
+  png_write_png( encoder->png_ptr, encoder->png_info_ptr, PNG_TRANSFORM_BGR, 0 );
+
+  free( row_pointers );
+  if (must_delete_bytes) free( bytes );
+
+  return 1;
+}
+
+void ImageIOEncoder_reserve( ImageIOEncoder* encoder, int additional_count )
+{
+  if ( !encoder->encoded_data )
+  {
+    if (additional_count < 16*1024) additional_count = 16*1024;
+    encoder->encoded_data = malloc( additional_count );
+    encoder->capacity = additional_count;
+  }
+  else
+  {
+    int required = encoder->encoded_data_size + additional_count;
+    if (required > encoder->capacity)
+    {
+      int double_size = encoder->capacity * 2;
+      if (double_size > required) required = double_size;
+
+      {
+        ImageIOByte* expanded_data = malloc( required );
+        memcpy( expanded_data, encoder->encoded_data, encoder->encoded_data_size );
+        free( encoder->encoded_data );
+        encoder->encoded_data = expanded_data;
+        encoder->capacity = required;
+      }
+    }
+  }
+}
+
+void ImageIOEncoder_write( ImageIOEncoder* encoder, ImageIOByte* bytes, int count )
+{
+  ImageIOEncoder_reserve( encoder, count );
+  memcpy( encoder->encoded_data + encoder->encoded_data_size, bytes, count );
+  encoder->encoded_data_size += count;
+}
+
+//-----------------------------------------------------------------------------
+//  ImageIO Utility
+//-----------------------------------------------------------------------------
+ImageIOLogical ImageIO_bitmap_has_translucent_pixels( ImageIOInteger* bitmap, int count )
+{
+  ImageIOInteger* cur = bitmap - 1;
+  int c = count;
+  while (--c >= 0)
+  {
+    if ((*(++cur) & 0xff000000) != 0xff000000) return 1;
+  }
+  return 0;
+}
+
+void ImageIO_demultiply_alpha( ImageIOInteger* bitmap, int count )
+{
+  ImageIOInteger* cur = bitmap - 1;
   int c = count;
   while (--c >= 0)
   {
@@ -233,9 +389,9 @@ void ImageIO_demultiply_alpha( ImageIOInteger* data, int count )
   }
 }
 
-void ImageIO_premultiply_alpha( ImageIOInteger* data, int count )
+void ImageIO_premultiply_alpha( ImageIOInteger* bitmap, int count )
 {
-  ImageIOInteger* cur = data - 1;
+  ImageIOInteger* cur = bitmap - 1;
   int c = count;
   while (--c >= 0)
   {
@@ -259,9 +415,9 @@ void ImageIO_premultiply_alpha( ImageIOInteger* data, int count )
   }
 }
 
-void ImageIO_swap_red_and_blue( ImageIOInteger* data, int count )
+void ImageIO_swap_red_and_blue( ImageIOInteger* bitmap, int count )
 {
-  ImageIOInteger* cur = data - 1;
+  ImageIOInteger* cur = bitmap - 1;
   int c = count;
   while (--c >= 0)
   {
@@ -286,16 +442,34 @@ void ImageIO_png_error_callback( png_structp png_ptr, png_const_charp msg )
   longjmp( ((ImageIODecoder*)png_get_io_ptr(png_ptr))->on_error, 1 );
 }
 
-void ImageIO_png_read_callback( png_structp png_ptr, png_bytep data, png_size_t count )
+void ImageIO_png_read_callback( png_structp png_ptr, png_bytep bytes, png_size_t count )
 {
   ImageIODecoder* decoder = (ImageIODecoder*) png_get_io_ptr( png_ptr );
-  if (count > decoder->remaining) count = (png_size_t) decoder->remaining;
+  if (count > decoder->remaining)
+  {
+    printf(" out of bytes\n");
+    count = (png_size_t) decoder->remaining;
+  }
 
   if (count)
   {
-    memcpy( data, decoder->reader, count );
+    memcpy( bytes, decoder->reader, count );
     decoder->reader    += count;
     decoder->remaining -= count;
   }
 }
 
+void ImageIO_png_write_callback( png_structp png_ptr, png_bytep bytes, png_size_t count )
+{
+  ImageIOEncoder* encoder = (ImageIOEncoder*) png_get_io_ptr( png_ptr );
+  ImageIOEncoder_write( encoder, (ImageIOByte*) bytes, (int) count );
+}
+
+void ImageIO_png_flush_callback( png_structp png_ptr )
+{
+  // No action
+}
+
+#ifdef __cplusplus
+} // end extern "C"
+#endif
