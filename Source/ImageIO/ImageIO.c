@@ -233,6 +233,7 @@ ImageIOLogical ImageIODecoder_decode_png( ImageIODecoder* decoder, ImageIOIntege
 ImageIOEncoder* ImageIOEncoder_init( ImageIOEncoder* encoder )
 {
   memset( encoder, 0, sizeof(ImageIOEncoder) );
+  encoder->quality = 75;
   return encoder;
 }
 
@@ -245,6 +246,65 @@ ImageIOEncoder* ImageIOEncoder_retire( ImageIOEncoder* encoder )
   }
 
   return encoder;
+}
+
+ImageIOLogical ImageIOEncoder_encode_jpeg( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height )
+{
+  unsigned long encoded_size;
+  JSAMPROW row_pointer;
+  ImageIOByte* buffer;
+
+  encoder->jpeg_info.err = jpeg_std_error( (struct jpeg_error_mgr*) encoder );
+  encoder->jpeg_error_manager.error_exit = ImageIO_jpeg_error_callback;
+
+  if (setjmp(encoder->on_error))
+  {
+    // Caught an error
+    jpeg_destroy_compress( &encoder->jpeg_info );
+  
+    //if (encoder->buffer) free( encoder->buffer );
+
+    return 0;
+  }
+
+  jpeg_create_compress(&encoder->jpeg_info);
+
+  jpeg_mem_dest( &encoder->jpeg_info, &encoder->encoded_data, &encoded_size );
+
+  encoder->jpeg_info.image_width      = width;
+  encoder->jpeg_info.image_height     = height;
+  encoder->jpeg_info.input_components = 3;
+  encoder->jpeg_info.in_color_space   = JCS_RGB;
+
+  jpeg_set_defaults( &encoder->jpeg_info);
+  jpeg_set_quality( &encoder->jpeg_info, encoder->quality, 1 );  // 0..100
+  jpeg_start_compress( &encoder->jpeg_info, 1 );
+
+  buffer = malloc( width*3 );
+  row_pointer = buffer;
+
+  while (encoder->jpeg_info.next_scanline < height)
+  {
+    int j = encoder->jpeg_info.next_scanline;
+    int n = width;
+    ImageIOInteger* pixels = bitmap + j*width - 1;
+    ImageIOByte*    dest = buffer;
+    while (--n >= 0)
+    {
+      int color = *(++pixels);
+      dest[0] = (ImageIOByte) (color >> 16);
+      dest[1] = (ImageIOByte) (color >> 8);
+      dest[2] = (ImageIOByte) color;
+      dest += 3;
+    }
+
+    jpeg_write_scanlines( &encoder->jpeg_info, &row_pointer, 1 );
+  }
+
+  jpeg_finish_compress( &encoder->jpeg_info );
+
+  encoder->encoded_data_size = encoded_size;
+  return 1;
 }
 
 ImageIOLogical ImageIOEncoder_encode_png( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height )

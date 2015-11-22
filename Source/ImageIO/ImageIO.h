@@ -37,7 +37,8 @@ extern "C"
 //-----------------------------------------------------------------------------
 typedef struct ImageIODecoder
 {
-  struct jpeg_error_mgr jpeg_error_manager;  // this line MUST come first (implicit in JPEG callback)
+  // These two lines MUST come first and second (implicit in JPEG callbacks)
+  struct jpeg_error_mgr jpeg_error_manager;
   jmp_buf               on_error;
 
   int          format;
@@ -73,12 +74,17 @@ ImageIOLogical  ImageIODecoder_decode_png( ImageIODecoder* decoder, ImageIOInteg
 //-----------------------------------------------------------------------------
 typedef struct ImageIOEncoder
 {
-  struct jpeg_error_mgr jpeg_error_manager;  // this line MUST come first (implicit in JPEG callback)
+  // These two lines MUST come first and second (implicit in JPEG callbacks)
+  struct jpeg_error_mgr jpeg_error_manager;
   jmp_buf               on_error;
 
+  // BEGIN PUBLIC
+  int          quality;   // JPEG quality 0..100.  Default 75
   ImageIOByte* encoded_data;
-  ImageIOByte* writer;
   int          encoded_data_size;
+  // END PUBLIC
+
+  ImageIOByte* writer;
   int          capacity;
 
   //ImageIOByte* buffer;
@@ -91,6 +97,7 @@ typedef struct ImageIOEncoder
 
 ImageIOEncoder* ImageIOEncoder_init( ImageIOEncoder* encoder );
 ImageIOEncoder* ImageIOEncoder_retire( ImageIOEncoder* encoder );
+ImageIOLogical  ImageIOEncoder_encode_jpeg( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height );
 ImageIOLogical  ImageIOEncoder_encode_png( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height );
 void            ImageIOEncoder_reserve( ImageIOEncoder* encoder, int additional_count );
 void            ImageIOEncoder_write( ImageIOEncoder* encoder, ImageIOByte* bytes, int count );

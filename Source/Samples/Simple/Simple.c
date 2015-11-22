@@ -58,7 +58,13 @@ int main()
     fclose( fp );
   }
 
-  printf( "Encoded size: %d\n", encoder.encoded_data_size );
+  if (ImageIOEncoder_encode_jpeg(&encoder,pixels,width,height))
+  {
+    printf( "Writing ../../../Build/cats.jpg\n" );
+    fp = fopen( "../../../Build/cats.jpg", "wb" );
+    fwrite( encoder.encoded_data, 1, encoder.encoded_data_size, fp );
+    fclose( fp );
+  }
 
   ImageIOEncoder_retire( &encoder );
 
