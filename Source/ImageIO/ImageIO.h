@@ -3,17 +3,19 @@
 //=============================================================================
 //  ImageIO.h
 //
-//  2015.11.20 by Abe Pralle
+//  v1.0.0 - 2015.11.21 by Abe Pralle
+//
+//  See README.md for instructions.
 //=============================================================================
 
 #if defined(_WIN32)
   #include <windows.h>
-  typedef __int32          ImageIOInteger;
+  typedef __uint32         ImageIOARGB32;
   typedef unsigned char    ImageIOByte;
   typedef int              ImageIOLogical;
 #else
   #include <stdint.h>
-  typedef int32_t          ImageIOInteger;
+  typedef uint32_t         ImageIOARGB32;
   typedef uint8_t          ImageIOByte;
   typedef int              ImageIOLogical;
 #endif
@@ -37,13 +39,16 @@ extern "C"
 //-----------------------------------------------------------------------------
 typedef struct ImageIODecoder
 {
-  // These two lines MUST come first and second (implicit in JPEG callbacks)
+  // These two lines MUST come first (implicit in JPEG callbacks)
   struct jpeg_error_mgr jpeg_error_manager;
   jmp_buf               on_error;
 
-  int          format;
+  // EXTERNAL
   int          width;
   int          height;
+  // END EXTERNAL
+
+  int          format;
 
   ImageIOByte* data;
   int          count;
@@ -61,12 +66,12 @@ typedef struct ImageIODecoder
 
 ImageIODecoder* ImageIODecoder_init( ImageIODecoder* decoder );
 ImageIODecoder* ImageIODecoder_retire( ImageIODecoder* decoder );
-ImageIOLogical  ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical  ImageIODecoder_set_input_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical  ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByte* encoded_data, int encoded_data_size );
-ImageIOLogical  ImageIODecoder_decode( ImageIODecoder* decoder, ImageIOInteger* bitmap );
-ImageIOLogical  ImageIODecoder_decode_jpeg( ImageIODecoder* decoder, ImageIOInteger* bitmap );
-ImageIOLogical  ImageIODecoder_decode_png( ImageIODecoder* decoder, ImageIOInteger* bitmap );
+ImageIOLogical  ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_set_input_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );
+ImageIOLogical  ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );
+ImageIOLogical  ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );
 
 
 //-----------------------------------------------------------------------------
@@ -74,20 +79,18 @@ ImageIOLogical  ImageIODecoder_decode_png( ImageIODecoder* decoder, ImageIOInteg
 //-----------------------------------------------------------------------------
 typedef struct ImageIOEncoder
 {
-  // These two lines MUST come first and second (implicit in JPEG callbacks)
+  // These two lines MUST come first (implicit in JPEG callbacks)
   struct jpeg_error_mgr jpeg_error_manager;
   jmp_buf               on_error;
 
-  // BEGIN PUBLIC
+  // EXTERNAL
   int          quality;   // JPEG quality 0..100.  Default 75
-  ImageIOByte* encoded_data;
-  int          encoded_data_size;
-  // END PUBLIC
+  ImageIOByte* encoded_bytes;
+  int          encoded_byte_count;
+  // END EXTERNAL
 
   ImageIOByte* writer;
   int          capacity;
-
-  //ImageIOByte* buffer;
 
   struct jpeg_compress_struct jpeg_info;
 
@@ -97,19 +100,21 @@ typedef struct ImageIOEncoder
 
 ImageIOEncoder* ImageIOEncoder_init( ImageIOEncoder* encoder );
 ImageIOEncoder* ImageIOEncoder_retire( ImageIOEncoder* encoder );
-ImageIOLogical  ImageIOEncoder_encode_jpeg( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height );
-ImageIOLogical  ImageIOEncoder_encode_png( ImageIOEncoder* encoder, ImageIOInteger* bitmap, int width, int height );
+ImageIOLogical  ImageIOEncoder_encode_argb32_jpeg( ImageIOEncoder* encoder, ImageIOARGB32* bitmap, int width, int height );
+ImageIOLogical  ImageIOEncoder_encode_argb32_png( ImageIOEncoder* encoder, ImageIOARGB32* bitmap, int width, int height );
+
+// INTERNAL USE
 void            ImageIOEncoder_reserve( ImageIOEncoder* encoder, int additional_count );
 void            ImageIOEncoder_write( ImageIOEncoder* encoder, ImageIOByte* bytes, int count );
 
 //-----------------------------------------------------------------------------
 //  ImageIO Utility
 //-----------------------------------------------------------------------------
-ImageIOLogical ImageIO_bitmap_has_translucent_pixels( ImageIOInteger* bitmap, int count );
+ImageIOLogical ImageIO_bitmap_has_translucent_pixels( ImageIOARGB32* bitmap, int count );
 
-void ImageIO_demultiply_alpha( ImageIOInteger* bitmap, int count );
-void ImageIO_premultiply_alpha( ImageIOInteger* bitmap, int count );
-void ImageIO_swap_red_and_blue( ImageIOInteger* bitmap, int count );
+void ImageIO_demultiply_alpha( ImageIOARGB32* bitmap, int count );
+void ImageIO_premultiply_alpha( ImageIOARGB32* bitmap, int count );
+void ImageIO_swap_red_and_blue( ImageIOARGB32* bitmap, int count );
 
 void ImageIO_jpeg_error_callback( j_common_ptr jpeg_info );
 void ImageIO_png_error_callback( png_structp png_ptr, png_const_charp msg );

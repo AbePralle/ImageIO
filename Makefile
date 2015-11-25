@@ -1,3 +1,5 @@
+IMAGE_IO_VERSION := 1.0.0
+
 LIB_PNG  := lpng1619
 LIB_JPEG := jpeg-9a
 
@@ -73,7 +75,9 @@ LIB_JPEG_SOURCE := \
 LIB_PNG_O_FILES  := $(LIB_PNG_SOURCE:%.c=Build/%.o)
 LIB_JPEG_O_FILES := $(LIB_JPEG_SOURCE:%.c=Build/%.o)
 
-all: Build/libimageio.a
+all: build
+	
+build: Build/libimageio.a
 
 Build/libimageio.a: Build Source/$(LIB_PNG) Source/$(LIB_JPEG) Build/ImageIO/ImageIO.o $(LIB_PNG_O_FILES) $(LIB_JPEG_O_FILES)
 	ar rcs Build/libimageio.a Build/ImageIO/ImageIO.o Build/$(LIB_PNG)/*.o Build/$(LIB_JPEG)/*.o
@@ -95,30 +99,18 @@ Build/ImageIO/ImageIO.o: Source/ImageIO/ImageIO.c Source/ImageIO/ImageIO.h
 	@mkdir -p Build/ImageIO
 	gcc $(CCFLAGS) -c Source/ImageIO/ImageIO.c -o Build/ImageIO/ImageIO.o
 
-#all: prepare build run
-
-prepare:
-	make -C ~/Projects/Rogue
-
-build: Build/imagecompiler
-
-Build/imagecompiler: Main.cpp Build/ImageCompiler.o $(LIB_PNG_O_FILES) $(LIB_JPEG_O_FILES)
-	g++ $(CCFLAGS) Main.cpp Build/ImageCompiler.o $(LIB_PNG_O_FILES) $(LIB_JPEG_O_FILES) -lz -o Build/imagecompiler
-
-Build/ImageCompiler.o: Build/ImageCompiler.cpp Build/ImageCompiler.h
-	g++ $(CCFLAGS) -c Build/ImageCompiler.cpp -o Build/ImageCompiler.o
-
-Build/ImageCompiler.cpp: ImageCompiler.rogue
-	mkdir -p Build
-	roguec ImageCompiler.rogue --output=Build
-
 Build/%.o: Source/%.c
 	@mkdir -p Build/$(LIB_PNG)
 	@mkdir -p Build/$(LIB_JPEG)
 	gcc $(CCFLAGS) -c $< -o $@
 
-run:
-	Build/imagecompiler
+product: build Product/ImageIO-$(IMAGE_IO_VERSION).zip
+
+Product/ImageIO-$(IMAGE_IO_VERSION).zip: Source/ImageIO/ImageIO.h Source/ImageIO/ImageIO.c
+	rm -rf Product/ImageIO-$(IMAGE_IO_VERSION)
+	mkdir -p Product/ImageIO-$(IMAGE_IO_VERSION)
+	cp -r Source/ImageIO Product/ImageIO-$(IMAGE_IO_VERSION)
+	cd Product && zip -r ImageIO-$(IMAGE_IO_VERSION).zip ImageIO-$(IMAGE_IO_VERSION)
 
 clean:
 	rm -rf Build/*

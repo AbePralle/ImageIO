@@ -9,7 +9,7 @@ int main()
   int   width;
   int   height;
   ImageIOByte*    data;
-  ImageIOInteger* pixels;
+  ImageIOARGB32*  pixels;
   ImageIODecoder  decoder;
   ImageIOEncoder  encoder;
 
@@ -40,8 +40,8 @@ int main()
   height = decoder.height;
   printf( "Image is %dx%d\n", width, height );
 
-  pixels = malloc( width * height * sizeof(ImageIOInteger) );
-  if ( !ImageIODecoder_decode(&decoder,pixels) )
+  pixels = malloc( width * height * sizeof(ImageIOARGB32) );
+  if ( !ImageIODecoder_decode_argb32(&decoder,pixels) )
   {
     printf( "Error decoding image.\n" );
     return 1;
@@ -50,19 +50,19 @@ int main()
   printf( "Image decoded successfully.\n" );
 
   ImageIOEncoder_init( &encoder );
-  if (ImageIOEncoder_encode_png(&encoder,pixels,width,height))
+  if (ImageIOEncoder_encode_argb32_png(&encoder,pixels,width,height))
   {
     printf( "Writing ../../../Build/cats.png\n" );
     fp = fopen( "../../../Build/cats.png", "wb" );
-    fwrite( encoder.encoded_data, 1, encoder.encoded_data_size, fp );
+    fwrite( encoder.encoded_bytes, 1, encoder.encoded_byte_count, fp );
     fclose( fp );
   }
 
-  if (ImageIOEncoder_encode_jpeg(&encoder,pixels,width,height))
+  if (ImageIOEncoder_encode_argb32_jpeg(&encoder,pixels,width,height))
   {
     printf( "Writing ../../../Build/cats.jpg\n" );
     fp = fopen( "../../../Build/cats.jpg", "wb" );
-    fwrite( encoder.encoded_data, 1, encoder.encoded_data_size, fp );
+    fwrite( encoder.encoded_bytes, 1, encoder.encoded_byte_count, fp );
     fclose( fp );
   }
 
