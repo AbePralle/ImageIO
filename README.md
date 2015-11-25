@@ -91,7 +91,7 @@ ImageIOEncoder_encode_argb32_jpeg( &encoder, bitmap, width, height );
   // OR
 ImageIOEncoder_encode_argb32_png( &encoder, bitmap, width, height );
 
-// Encoder struct maintains the encoded JPEG or PNG data.  Access tne data
+// Encoder struct maintains the encoded JPEG or PNG data.  Access the data
 // (saving or copying it) before retiring the encoder.
 ImageIOByte* data = encoder.encoded_bytes;
 int count = encoder.encoded_byte_count;
