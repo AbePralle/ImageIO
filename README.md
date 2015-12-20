@@ -7,7 +7,7 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.0 - November 25, 2015</td>
+    <td>1.0.1 - December 19, 2015</td>
   </tr>
   <tr>
     <td>Language</td>
@@ -204,3 +204,11 @@ pngwrite.c
 pngwtran.c
 pngwutil.c
 ```
+
+## Change Log
+
+### v1.0.1 - December 19, 2015
+-  Added type cast to prevent an `unsigned long` to `int` conversion warning.
+
+### v1.0.0 - November 25, 2015
+-  Original release.

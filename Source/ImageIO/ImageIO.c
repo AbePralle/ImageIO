@@ -1,9 +1,9 @@
 //=============================================================================
 //  ImageIO.c
 //
-//  See ImageIO.h for more information.
-//
 //  v1.0.0 - 2015.11.21 by Abe Pralle
+//
+//  See README.md for instructions.
 //=============================================================================
 
 #include <stdlib.h>
@@ -302,7 +302,7 @@ ImageIOLogical ImageIOEncoder_encode_argb32_jpeg( ImageIOEncoder* encoder, Image
 
   jpeg_finish_compress( &encoder->jpeg_info );
 
-  encoder->encoded_byte_count = encoded_size;
+  encoder->encoded_byte_count = (int) encoded_size;
   return 1;
 }
 
