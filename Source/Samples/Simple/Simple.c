@@ -30,7 +30,7 @@ int main()
   fclose( fp );
 
   ImageIODecoder_init( &decoder );
-  if ( !ImageIODecoder_set_input(&decoder,data,size) )
+  if ( !ImageIODecoder_open(&decoder,data,size) )
   {
     printf( "Input is neither a PNG nor a JPEG.\n" );
     return 1;

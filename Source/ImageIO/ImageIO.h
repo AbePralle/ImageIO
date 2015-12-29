@@ -66,9 +66,9 @@ typedef struct ImageIODecoder
 
 ImageIODecoder* ImageIODecoder_init( ImageIODecoder* decoder );
 ImageIODecoder* ImageIODecoder_retire( ImageIODecoder* decoder );
-ImageIOLogical  ImageIODecoder_set_input( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
-ImageIOLogical  ImageIODecoder_set_input_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
-ImageIOLogical  ImageIODecoder_set_input_png( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_open( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_open_jpeg( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
+ImageIOLogical  ImageIODecoder_open_png( ImageIODecoder* decoder, ImageIOByte* encoded_bytes, int encoded_byte_count );
 ImageIOLogical  ImageIODecoder_decode_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );
 ImageIOLogical  ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );
 ImageIOLogical  ImageIODecoder_decode_png_argb32( ImageIODecoder* decoder, ImageIOARGB32* bitmap );

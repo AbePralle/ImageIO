@@ -7,7 +7,7 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.1 - December 19, 2015</td>
+    <td>1.0.2 - December 29, 2015</td>
   </tr>
   <tr>
     <td>Language</td>
@@ -38,7 +38,7 @@ ImageIODecoder decoder;
 
 // Initialize the decoder and set the bytes as input
 ImageIODecoder_init( &decoder );
-if ( !ImageIODecoder_set_input(&decoder, encoded_bytes, encoded_byte_count) )
+if ( !ImageIODecoder_open(&decoder, encoded_bytes, encoded_byte_count) )
 {
   // Not a valid JPEG or PNG file - generate error message and abort. 
   ...
@@ -206,6 +206,9 @@ pngwutil.c
 ```
 
 ## Change Log
+
+### v1.0.2 - December 29, 2015
+-  API tweak - 'ImageIODecoder_set_input()' renamed to 'ImageIODecoder_open()'.
 
 ### v1.0.1 - December 19, 2015
 -  Added type cast to prevent an `unsigned long` to `int` conversion warning.
