@@ -1,5 +1,3 @@
-#ifndef IMAGE_IO
-#define IMAGE_IO
 //=============================================================================
 //  ImageIO.h
 //
@@ -7,6 +5,19 @@
 //
 //  See README.md for instructions.
 //=============================================================================
+#pragma once
+
+#ifndef IMAGE_IO_NAMESPACE
+  #define IMAGE_IO_NAMESPACE ImageIO
+#endif
+
+#include <stdio.h>
+#include <setjmp.h>
+#include "jpeglib.h"
+#include "png.h"
+
+namespace IMAGE_IO_NAMESPACE
+{
 
 #if defined(_WIN32)
   #include <windows.h>
@@ -23,16 +34,6 @@
 #define IMAGE_IO_INVALID 0
 #define IMAGE_IO_PNG     1
 #define IMAGE_IO_JPEG    2
-
-#include <stdio.h>
-#include <setjmp.h>
-#include "jpeglib.h"
-#include "png.h"
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
 
 //-----------------------------------------------------------------------------
 //  ImageIODecoder
@@ -122,8 +123,4 @@ void ImageIO_png_read_callback( png_structp png_ptr, png_bytep data, png_size_t 
 void ImageIO_png_write_callback( png_structp png_ptr, png_bytep data, png_size_t count );
 void ImageIO_png_flush_callback( png_structp png_ptr );
 
-#ifdef __cplusplus
-} // end extern "C"
-#endif
-
-#endif // IMAGE_IO
+};  // namespace IMAGE_IO_NAMESPACE

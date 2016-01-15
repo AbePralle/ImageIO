@@ -19,10 +19,10 @@ $(OUTPUT_FOLDER):
 	mkdir -p $(OUTPUT_FOLDER)
 
 $(OUTPUT_FOLDER)/simple: $(OUTPUT_FOLDER)/simple.o $(BUILD_FOLDER)/libimageio.a
-	gcc $(CC_FLAGS) $(OUTPUT_FOLDER)/simple.o -L $(BUILD_FOLDER) -limageio -o $(OUTPUT_FOLDER)/simple
+	g++ $(CC_FLAGS) $(OUTPUT_FOLDER)/simple.o -L $(BUILD_FOLDER) -limageio -o $(OUTPUT_FOLDER)/simple
 
-$(OUTPUT_FOLDER)/simple.o: Simple.c $(BUILD_FOLDER)/libimageio.a
-	gcc $(CC_FLAGS) -c Simple.c -o $(OUTPUT_FOLDER)/simple.o
+$(OUTPUT_FOLDER)/simple.o: Simple.cpp $(BUILD_FOLDER)/libimageio.a
+	g++ $(CC_FLAGS) -c Simple.cpp -o $(OUTPUT_FOLDER)/simple.o
 
 run:
 	$(OUTPUT_FOLDER)/simple

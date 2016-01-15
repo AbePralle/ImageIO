@@ -95,9 +95,9 @@ Source/$(LIB_JPEG):
 	@echo "http://ijg.org/ and/or set the LIB_JPEG variable at the top of the Makefile."
 	@false
 
-Build/ImageIO/ImageIO.o: Source/ImageIO/ImageIO.c Source/ImageIO/ImageIO.h
+Build/ImageIO/ImageIO.o: Source/ImageIO/ImageIO.cpp Source/ImageIO/ImageIO.h
 	@mkdir -p Build/ImageIO
-	gcc $(CCFLAGS) -c Source/ImageIO/ImageIO.c -o Build/ImageIO/ImageIO.o
+	gcc $(CCFLAGS) -c Source/ImageIO/ImageIO.cpp -o Build/ImageIO/ImageIO.o
 
 Build/%.o: Source/%.c
 	@mkdir -p Build/$(LIB_PNG)
@@ -106,7 +106,7 @@ Build/%.o: Source/%.c
 
 product: build Product/ImageIO-$(IMAGE_IO_VERSION).zip
 
-Product/ImageIO-$(IMAGE_IO_VERSION).zip: Source/ImageIO/ImageIO.h Source/ImageIO/ImageIO.c
+Product/ImageIO-$(IMAGE_IO_VERSION).zip: Source/ImageIO/ImageIO.h Source/ImageIO/ImageIO.cpp
 	rm -rf Product/ImageIO-$(IMAGE_IO_VERSION)
 	mkdir -p Product/ImageIO-$(IMAGE_IO_VERSION)
 	cp -r Source/ImageIO Product/ImageIO-$(IMAGE_IO_VERSION)

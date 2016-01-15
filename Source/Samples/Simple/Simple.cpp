@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "ImageIO.h"
+using namespace ImageIO;
 
 int main()
 {
@@ -25,7 +26,7 @@ int main()
   size = (int) ftell( fp );
   fseek( fp, 0, SEEK_SET );
 
-  data = malloc( size );
+  data = new ImageIOByte[ size ];
   fread( data, 1, size, fp );
   fclose( fp );
 
@@ -40,7 +41,7 @@ int main()
   height = decoder.height;
   printf( "Image is %dx%d\n", width, height );
 
-  pixels = malloc( width * height * sizeof(ImageIOARGB32) );
+  pixels = new ImageIOARGB32[ width * height ];
   if ( !ImageIODecoder_decode_argb32(&decoder,pixels) )
   {
     printf( "Error decoding image.\n" );

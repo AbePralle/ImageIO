@@ -1,5 +1,5 @@
 //=============================================================================
-//  ImageIO.c
+//  ImageIO.cpp
 //
 //  v1.0.2 - 2015.12.29 by Abe Pralle
 //
@@ -10,10 +10,8 @@
 #include <string.h>
 #include "ImageIO.h"
 
-#ifdef __cplusplus
-extern "C"
+namespace IMAGE_IO_NAMESPACE
 {
-#endif
 
 //-----------------------------------------------------------------------------
 //  ImageIODecoder
@@ -55,7 +53,7 @@ ImageIOLogical ImageIODecoder_open_jpeg( ImageIODecoder* decoder, ImageIOByte* e
     // Caught an error
     jpeg_destroy_decompress( &decoder->jpeg_info );
   
-    if (decoder->buffer) free( decoder->buffer );
+    if (decoder->buffer) delete decoder->buffer;
 
     decoder->format = IMAGE_IO_INVALID;
   
@@ -164,7 +162,7 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
 
   if (decoder->format != IMAGE_IO_JPEG) return 0;  // Input was not set up as JPEG.
 
-  decoder->buffer = (ImageIOByte*) malloc( width*3 );
+  decoder->buffer = new ImageIOByte[ width*3 ];
   
   int j = decoder->jpeg_info.output_scanline;
   while (j < height)
@@ -201,7 +199,7 @@ ImageIOLogical ImageIODecoder_decode_jpeg_argb32( ImageIODecoder* decoder, Image
     j = decoder->jpeg_info.output_scanline;
   }
   
-  free( decoder->buffer );
+  delete decoder->buffer;
   decoder->buffer = 0;
   
   jpeg_finish_decompress( &decoder->jpeg_info );
@@ -243,7 +241,7 @@ ImageIOEncoder* ImageIOEncoder_retire( ImageIOEncoder* encoder )
 {
   if (encoder->encoded_bytes)
   {
-    free( encoder->encoded_bytes );
+    delete encoder->encoded_bytes;
     encoder->encoded_bytes = 0;
   }
 
@@ -276,10 +274,10 @@ ImageIOLogical ImageIOEncoder_encode_argb32_jpeg( ImageIOEncoder* encoder, Image
   encoder->jpeg_info.in_color_space   = JCS_RGB;
 
   jpeg_set_defaults( &encoder->jpeg_info);
-  jpeg_set_quality( &encoder->jpeg_info, encoder->quality, 1 );  // 0..100
-  jpeg_start_compress( &encoder->jpeg_info, 1 );
+  jpeg_set_quality( &encoder->jpeg_info, encoder->quality, TRUE );  // 0..100
+  jpeg_start_compress( &encoder->jpeg_info, TRUE );
 
-  buffer = malloc( width*3 );
+  buffer = new ImageIOByte[ width*3 ];
   row_pointer = buffer;
 
   while (encoder->jpeg_info.next_scanline < height)
@@ -350,7 +348,7 @@ ImageIOLogical ImageIOEncoder_encode_argb32_png( ImageIOEncoder* encoder, ImageI
     color_type = PNG_COLOR_TYPE_RGB;
     must_delete_bytes = 1;
     bytes_per_pixel = 3;
-    bytes = malloc( width * height * 3 );
+    bytes = new png_byte[ width * height * 3 ];
     dest = bytes;
     while (--n >= 0)
     {
@@ -365,7 +363,7 @@ ImageIOLogical ImageIOEncoder_encode_argb32_png( ImageIOEncoder* encoder, ImageI
   png_set_IHDR( encoder->png_ptr, encoder->png_info_ptr, width, height, 8,
        color_type, PNG_INTERLACE_NONE, PNG_COMPRESSION_TYPE_DEFAULT, PNG_FILTER_TYPE_DEFAULT );
 
-  row_pointers = malloc( sizeof(png_bytep) * height );
+  row_pointers = new png_bytep[ height ];
   for (j=0; j<height; ++j)
   {
     row_pointers[j] = bytes + j*width*bytes_per_pixel;
@@ -375,8 +373,8 @@ ImageIOLogical ImageIOEncoder_encode_argb32_png( ImageIOEncoder* encoder, ImageI
 
   png_write_png( encoder->png_ptr, encoder->png_info_ptr, PNG_TRANSFORM_BGR, 0 );
 
-  free( row_pointers );
-  if (must_delete_bytes) free( bytes );
+  delete row_pointers;
+  if (must_delete_bytes) delete bytes;
 
   return 1;
 }
@@ -386,7 +384,7 @@ void ImageIOEncoder_reserve( ImageIOEncoder* encoder, int additional_count )
   if ( !encoder->encoded_bytes )
   {
     if (additional_count < 16*1024) additional_count = 16*1024;
-    encoder->encoded_bytes = malloc( additional_count );
+    encoder->encoded_bytes = new ImageIOByte[ additional_count ];
     encoder->capacity = additional_count;
   }
   else
@@ -398,9 +396,9 @@ void ImageIOEncoder_reserve( ImageIOEncoder* encoder, int additional_count )
       if (double_size > required) required = double_size;
 
       {
-        ImageIOByte* expanded_data = malloc( required );
+        ImageIOByte* expanded_data = new ImageIOByte[ required ];
         memcpy( expanded_data, encoder->encoded_bytes, encoder->encoded_byte_count );
-        free( encoder->encoded_bytes );
+        delete encoder->encoded_bytes;
         encoder->encoded_bytes = expanded_data;
         encoder->capacity = required;
       }
@@ -529,6 +527,5 @@ void ImageIO_png_flush_callback( png_structp png_ptr )
   // No action
 }
 
-#ifdef __cplusplus
-} // end extern "C"
-#endif
+};  // namespace IMAGE_IO_NAMESPACE
+
