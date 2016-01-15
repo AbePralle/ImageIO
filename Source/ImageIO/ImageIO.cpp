@@ -1,7 +1,7 @@
 //=============================================================================
 //  ImageIO.cpp
 //
-//  v1.0.4 - 2016.01.15 by Abe Pralle
+//  v1.0.5 - 2016.01.15 by Abe Pralle
 //
 //  See README.md for instructions.
 //=============================================================================
@@ -44,7 +44,6 @@ bool Decoder::open_jpeg( Byte* encoded_bytes, int encoded_byte_count )
   format = JPEG;
   data = encoded_bytes;
   count = encoded_byte_count;
-printf("pt1\n");
   jpeg_info.err = jpeg_std_error( (struct jpeg_error_mgr*) this );
   jpeg_error_manager.error_exit = ImageIO_jpeg_error_callback;
   
@@ -68,7 +67,6 @@ printf("pt1\n");
   
   width = jpeg_info.output_width;
   height = jpeg_info.output_height;
-printf("pt9\n");
 
   return true;
 }
