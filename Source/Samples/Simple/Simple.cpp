@@ -30,8 +30,7 @@ int main()
   fread( data, 1, size, fp );
   fclose( fp );
 
-  ImageIODecoder_init( &decoder );
-  if ( !ImageIODecoder_open(&decoder,data,size) )
+  if ( !decoder.open(data,size) )
   {
     printf( "Input is neither a PNG nor a JPEG.\n" );
     return 1;
@@ -42,7 +41,7 @@ int main()
   printf( "Image is %dx%d\n", width, height );
 
   pixels = new ImageIOARGB32[ width * height ];
-  if ( !ImageIODecoder_decode_argb32(&decoder,pixels) )
+  if ( !decoder.decode_argb32(pixels) )
   {
     printf( "Error decoding image.\n" );
     return 1;
