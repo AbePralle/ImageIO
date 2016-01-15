@@ -7,7 +7,7 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.3 - January 14, 2016</td>
+    <td>1.0.4 - January 15, 2016</td>
   </tr>
   <tr>
     <td>Language</td>
@@ -22,8 +22,8 @@
 
 ## Usage
 
-### Org Namespace
-The ImageIO library is defined within the nested namespace `ORG_NAMESPACE::ImageIO`, where `ORG_NAMESPACE` is a `#define` that defaults to `Org`.  Including "ImageIO.h" automatically issues the directive `using namespace ORG_NAMESPACE;`.  If you're wanting to use ImageIO in a precompiled library and avoid conflicts with end users who might also use ImageIO, define `ORG_NAMESPACE=SomeOtherNamespace` as a compiler flag.
+### Project Namespace
+The ImageIO library is defined within the nested namespace `PROJECT_NAMESPACE::ImageIO`, where `PROJECT_NAMESPACE` is a `#define` that defaults to `Project`.  Including "ImageIO.h" automatically issues the directive `using namespace PROJECT_NAMESPACE;`.  If you're wanting to use ImageIO in a precompiled library and avoid conflicts with end users who might also use ImageIO, define `PROJECT_NAMESPACE=SomeOtherNamespace` as a compiler flag.
 
 ### Decoding JPEG and PNG to ARGB32
 
@@ -204,6 +204,9 @@ pngwutil.c
 ```
 
 ## Change Log
+
+### v1.0.4 - January 15, 2016
+-  Changed ORG_NAMESPACE to PROJECT_NAMESPACE.
 
 ### v1.0.3 - January 14, 2016
 -  Converted library to C++.

@@ -1,7 +1,7 @@
 //=============================================================================
 //  ImageIO.cpp
 //
-//  v1.0.3 - 2016.01.14 by Abe Pralle
+//  v1.0.4 - 2016.01.15 by Abe Pralle
 //
 //  See README.md for instructions.
 //=============================================================================
@@ -10,7 +10,7 @@
 #include <string.h>
 #include "ImageIO.h"
 
-namespace ORG_NAMESPACE
+namespace PROJECT_NAMESPACE
 {
 
 namespace ImageIO
@@ -527,5 +527,5 @@ void ImageIO_png_flush_callback( png_structp png_ptr )
 
 };  // namespace ImageIO
 
-};  // namespace ORG_NAMESPACE
+};  // namespace PROJECT_NAMESPACE
 
