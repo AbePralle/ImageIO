@@ -1,11 +1,12 @@
 //=============================================================================
 //  ImageIO.h
 //
-//  v1.0.2 - 2015.12.29 by Abe Pralle
+//  v1.0.3 - 2016.01.14 by Abe Pralle
 //
 //  See README.md for instructions.
 //=============================================================================
-#pragma once
+#ifndef IMAGE_IO_H
+#define IMAGE_IO_H
 
 #ifndef ORG_NAMESPACE
   #define ORG_NAMESPACE Org
@@ -116,11 +117,11 @@ struct Encoder
 //-----------------------------------------------------------------------------
 //  ImageIO Utility
 //-----------------------------------------------------------------------------
-bool ImageIO_bitmap_has_translucent_pixels( ARGB32* bitmap, int count );
+bool bitmap_has_translucent_pixels( ARGB32* bitmap, int count );
 
-void ImageIO_demultiply_alpha( ARGB32* bitmap, int count );
-void ImageIO_premultiply_alpha( ARGB32* bitmap, int count );
-void ImageIO_swap_red_and_blue( ARGB32* bitmap, int count );
+void demultiply_alpha( ARGB32* bitmap, int count );
+void premultiply_alpha( ARGB32* bitmap, int count );
+void swap_red_and_blue( ARGB32* bitmap, int count );
 
 void ImageIO_jpeg_error_callback( j_common_ptr jpeg_info );
 void ImageIO_png_error_callback( png_structp png_ptr, png_const_charp msg );
@@ -134,3 +135,4 @@ void ImageIO_png_flush_callback( png_structp png_ptr );
 
 using namespace ORG_NAMESPACE;
 
+#endif // IMAGE_IO_H

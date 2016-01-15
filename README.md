@@ -7,11 +7,11 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.2 - December 29, 2015</td>
+    <td>1.0.3 - January 14, 2016</td>
   </tr>
   <tr>
     <td>Language</td>
-    <td>C</td>
+    <td>C++</td>
   </tr>
   <tr>
     <td>Dependencies</td>
@@ -22,23 +22,25 @@
 
 ## Usage
 
+### Org Namespace
+The ImageIO library is defined within the nested namespace `ORG_NAMESPACE::ImageIO`, where `ORG_NAMESPACE` is a `#define` that defaults to `Org`.  Including "ImageIO.h" automatically issues the directive `using namespace ORG_NAMESPACE;`.  If you're wanting to use ImageIO in a precompiled library and avoid conflicts with end users who might also use ImageIO, define `ORG_NAMESPACE=SomeOtherNamespace` as a compiler flag.
+
 ### Decoding JPEG and PNG to ARGB32
 
 ```C++
 // Input bytes containing encoded JPEG or PNG read from a file or some
-// other location.  ImageIOByte is equivalent to 'unsigned char'.
-ImageIOByte*   encoded_bytes = ...;
+// other location.  ImageIO::Byte is equivalent to 'unsigned char'.
+ImageIO::Byte*   encoded_bytes = ...;
 int            encoded_byte_count = ...;
 
 // Pointer to bitmap data that we'll create once we know the size of the image.
-ImageIOARGB32* bitmap;  // ARGB32 equivalent to unsigned int32.
+ImageIO::ARGB32* bitmap;  // ARGB32 equivalent to unsigned int32.
 
 // Stack-based decoder struct.
-ImageIODecoder decoder;
+ImageIO::Decoder decoder;
 
 // Initialize the decoder and set the bytes as input
-ImageIODecoder_init( &decoder );
-if ( !ImageIODecoder_open(&decoder, encoded_bytes, encoded_byte_count) )
+if ( !decoder.open(encoded_bytes, encoded_byte_count) )
 {
   // Not a valid JPEG or PNG file - generate error message and abort. 
   ...
@@ -46,19 +48,18 @@ if ( !ImageIODecoder_open(&decoder, encoded_bytes, encoded_byte_count) )
 
 // We now know the dimensions of the decoded image.  Create a bitmap to decode
 // into.
-bitmap = new ImageIOARGB32[ decoder.width * decoder.height ];
+bitmap = new ImageIO::ARGB32[ decoder.width * decoder.height ];
 
 // Decode.
-if ( !ImageIODecoder_decode_argb32(&decoder, bitmap) )
+if ( !decoder.decode_argb32(bitmap) )
 {
   // Not a valid JPEG or PNG file - generate error message and abort. 
   delete bitmap;
   ...
 }
 
-// Finished - retire the decoder and delete 'encoded_bytes' if necessary.
-// It is up to the developer to eventually delete 'bitmap'.
-ImageIODecoder_retire( &decoder );
+// Finished!  It is up to the developer to eventually delete 'bitmap'
+// since it was created outside the ImageIO library.
 
 // ---- Working with the bitmap data ----
 // bitmap[0]                 - The leftmost pixel of the top row
@@ -75,44 +76,41 @@ ImageIODecoder_retire( &decoder );
 
 ```C++
 // Pointer to existing ARGB32 bitmap data to be encoded as JPEG or PNG.
-ImageIOARGB32* bitmap = ...;
+ImageIO::ARGB32* bitmap = ...;
 int width = ...;
 int height = ...;
 
 // Stack-based encoder struct.
-ImageIOEncoder encoder;
+ImageIO::Encoder encoder;
 
 // Initialize the encoder and optionally set an encoding quality.
-ImageIOEncoder_init( &encoder );
 encoder.quality = 75;  // only affects JPEG encoding; 0..100 (75 default)
 
 // Encode.
-ImageIOEncoder_encode_argb32_jpeg( &encoder, bitmap, width, height );
+encoder.encode_argb32_jpeg( bitmap, width, height );
   // OR
-ImageIOEncoder_encode_argb32_png( &encoder, bitmap, width, height );
+encoder.encode_argb32_png( bitmap, width, height );
 
 // Encoder struct maintains the encoded JPEG or PNG data.  Access the data
 // (saving or copying it) before retiring the encoder.
-ImageIOByte* data = encoder.encoded_bytes;
+ImageIO::Byte* data = encoder.encoded_bytes;
 int count = encoder.encoded_byte_count;
 ...
 
-// Finished - retire the encoder, allowing it to delete its internal data.
-// It is up to the developer to delete 'bitmap' if necessary.
-ImageIOEncoder_retire( &encoder );
+// Finished!  It is up to the developer to delete 'bitmap' if necessary.
 ```
 
 ###  Utility Functions
 ImageIO provides a few utility functions that can be useful when reading and writing images.
 
-`ImageIO_demultiply_alpha( bitmap:ImageIOARGB32*, count:int )`  
-The opposite of `ImageIO_premultiply_alpha()` - divides each pixel's color component by its alpha value.
+`ImageIO::demultiply_alpha( bitmap:ImageIO::ARGB32*, count:int )`  
+The opposite of `ImageIO::premultiply_alpha()` - divides each pixel's color component by its alpha value.
 Not often needed but provided for symmetry.
 
-`ImageIO_premultiply_alpha( bitmap:ImageIOARGB32*, count:int )`  
+`ImageIO::premultiply_alpha( bitmap:ImageIO::ARGB32*, count:int )`  
 Multiplies the Red, Green, and Blue color components of each pixel by its alpha value (conceptually treating the alpha value as a proportional value 0.0 to 1.0).  This offers a significant performance boost during rendering by allowing the computationally simpler blending mode of `SOURCE + DEST*INVERSE_ALPHA` in place of `SOURCE*ALPHA + DEST*INVERSE_ALPHA`.
 
-`ImageIO_swap_red_and_blue( bitmap:ImageIOARGB32*, count:int )`  
+`ImageIO::swap_red_and_blue( bitmap:ImageIO::ARGB32*, count:int )`  
 Swaps the Red and Blue color components of each pixel, transforming each ARGB value into the ABGR format favored by Open GL.
 
 
@@ -206,6 +204,9 @@ pngwutil.c
 ```
 
 ## Change Log
+
+### v1.0.3 - January 14, 2016
+-  Converted library to C++.
 
 ### v1.0.2 - December 29, 2015
 -  API tweak - 'ImageIODecoder_set_input()' renamed to 'ImageIODecoder_open()'.

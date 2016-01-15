@@ -1,7 +1,7 @@
 //=============================================================================
 //  ImageIO.cpp
 //
-//  v1.0.2 - 2015.12.29 by Abe Pralle
+//  v1.0.3 - 2016.01.14 by Abe Pralle
 //
 //  See README.md for instructions.
 //=============================================================================
@@ -330,7 +330,7 @@ bool Encoder::encode_argb32_png( ARGB32* bitmap, int width, int height )
 
   png_set_write_fn( png_ptr, this, ImageIO_png_write_callback, ImageIO_png_flush_callback );
 
-  if (ImageIO_bitmap_has_translucent_pixels(bitmap,width*height))
+  if (bitmap_has_translucent_pixels(bitmap,width*height))
   {
     color_type = PNG_COLOR_TYPE_RGB_ALPHA;
     must_delete_bytes = 0;
@@ -414,7 +414,7 @@ void Encoder::write( Byte* bytes, int count )
 //-----------------------------------------------------------------------------
 //  ImageIO Utility
 //-----------------------------------------------------------------------------
-bool ImageIO_bitmap_has_translucent_pixels( ARGB32* bitmap, int count )
+bool bitmap_has_translucent_pixels( ARGB32* bitmap, int count )
 {
   ARGB32* cur = bitmap - 1;
   int c = count;
@@ -425,7 +425,7 @@ bool ImageIO_bitmap_has_translucent_pixels( ARGB32* bitmap, int count )
   return 0;
 }
 
-void ImageIO_demultiply_alpha( ARGB32* bitmap, int count )
+void demultiply_alpha( ARGB32* bitmap, int count )
 {
   ARGB32* cur = bitmap - 1;
   int c = count;
@@ -444,7 +444,7 @@ void ImageIO_demultiply_alpha( ARGB32* bitmap, int count )
   }
 }
 
-void ImageIO_premultiply_alpha( ARGB32* bitmap, int count )
+void premultiply_alpha( ARGB32* bitmap, int count )
 {
   ARGB32* cur = bitmap - 1;
   int c = count;
@@ -470,7 +470,7 @@ void ImageIO_premultiply_alpha( ARGB32* bitmap, int count )
   }
 }
 
-void ImageIO_swap_red_and_blue( ARGB32* bitmap, int count )
+void swap_red_and_blue( ARGB32* bitmap, int count )
 {
   ARGB32* cur = bitmap - 1;
   int c = count;
