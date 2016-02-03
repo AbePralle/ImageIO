@@ -7,7 +7,7 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.5 - January 15, 2016</td>
+    <td>1.0.6 - February 2, 2016</td>
   </tr>
   <tr>
     <td>Language</td>
@@ -204,6 +204,9 @@ pngwutil.c
 ```
 
 ## Change Log
+
+### v1.0.6 - February 2, 2016
+-  Fixed namespace bug - moved an #include out of the project namespace.
 
 ### v1.0.5 - January 15, 2016
 -  Removed debug printing.

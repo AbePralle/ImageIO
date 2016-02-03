@@ -1,7 +1,7 @@
 //=============================================================================
 //  ImageIO.h
 //
-//  v1.0.5 - 2016.01.15 by Abe Pralle
+//  v1.0.6 - 2016.02.02 by Abe Pralle
 //
 //  See README.md for instructions.
 //=============================================================================
@@ -17,6 +17,12 @@
 #include "jpeglib.h"
 #include "png.h"
 
+#if defined(_WIN32)
+  #include <windows.h>
+#else
+  #include <stdint.h>
+#endif
+
 namespace PROJECT_NAMESPACE
 {
 
@@ -24,11 +30,9 @@ namespace ImageIO
 {
 
 #if defined(_WIN32)
-  #include <windows.h>
   typedef __uint32         ARGB32;
   typedef unsigned char    Byte;
 #else
-  #include <stdint.h>
   typedef uint32_t         ARGB32;
   typedef uint8_t          Byte;
 #endif
