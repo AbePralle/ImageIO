@@ -7,7 +7,7 @@
   </tr>
   <tr>
     <td>Current Version</td>
-    <td>1.0.7 - February 12, 2016</td>
+    <td>1.0.8 - February 12, 2016</td>
   </tr>
   <tr>
     <td>Language</td>
@@ -204,6 +204,9 @@ pngwutil.c
 ```
 
 ## Change Log
+
+### v1.0.8 - February 12, 2016
+-  Forgot to update version number in source headers in v1.0.7.
 
 ### v1.0.7 - February 12, 2016
 -  Removed semicolon after namespace closing bracket to avoid C++-11 warning.
