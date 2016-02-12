@@ -133,9 +133,9 @@ void ImageIO_png_read_callback( png_structp png_ptr, png_bytep data, png_size_t 
 void ImageIO_png_write_callback( png_structp png_ptr, png_bytep data, png_size_t count );
 void ImageIO_png_flush_callback( png_structp png_ptr );
 
-}; // namespace ImageIO
+} // namespace ImageIO
 
-};  // namespace PROJECT_NAMESPACE;
+} // namespace PROJECT_NAMESPACE;
 
 using namespace PROJECT_NAMESPACE;
 

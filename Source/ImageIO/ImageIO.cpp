@@ -523,7 +523,7 @@ void ImageIO_png_flush_callback( png_structp png_ptr )
   // No action
 }
 
-};  // namespace ImageIO
+}  // namespace ImageIO
 
-};  // namespace PROJECT_NAMESPACE
+}  // namespace PROJECT_NAMESPACE
 
